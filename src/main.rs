@@ -1,3 +1,5 @@
+mod arguments;
+
 use std::fs::File;
 use std::io::Read;
 
@@ -52,5 +54,13 @@ fn main() {
 
    let api = extract_configuration();
    let default_spot_header = create_spotify_api_header();
+
+   let args = arguments::parse_args();
+
+   match args{
+	   arguments::Args::NewPlaylist(playlists) => println!("Not available yet!"),
+	   arguments::Args::Update => println!("Not available yet!"),
+	   arguments::Args::DeletePlaylist(playlists) => println!("Not available yet!")
+   }
 
 }
