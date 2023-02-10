@@ -7,11 +7,11 @@ use serde_json::Value;
 use single_instance::SingleInstance;
 use reqwest::header;
 
-struct ArchifyApi{
+struct ArchifyConf{
 	archify_id: String,
 }
 
-fn extract_configuration() -> ArchifyApi{
+fn extract_configuration() -> ArchifyConf{
 	let mut buf = String::new();
 
 	File::open("data/config.json")
@@ -21,7 +21,7 @@ fn extract_configuration() -> ArchifyApi{
 
 	let json_api: Value = serde_json::from_str(&*buf).unwrap();
 
-	ArchifyApi { 
+	ArchifyConf { 
 		archify_id: json_api["archify_id"].to_string(), 
 	}
 }
@@ -52,7 +52,7 @@ fn main() {
    println!("Welcome to archify!");
    let _instance  = verify_single_instance();
 
-   let api = extract_configuration();
+   let conf = extract_configuration();
    let default_spot_header = create_spotify_api_header();
 
    let args = arguments::parse_args();
