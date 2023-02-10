@@ -15,6 +15,7 @@ static APP_USER_AGENT: &str = concat!(
 
 struct ArchifyConf{
 	archify_id: String,
+	archify_secret: String
 }
 
 fn extract_configuration() -> ArchifyConf{
@@ -29,6 +30,7 @@ fn extract_configuration() -> ArchifyConf{
 
 	ArchifyConf { 
 		archify_id: json_api["archify_id"].to_string(), 
+		archify_secret: json_api["archify_id"].to_string() 
 	}
 }
 
