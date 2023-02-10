@@ -1,11 +1,12 @@
 mod arguments;
+mod spotify;
 
 use std::fs::File;
 use std::io::Read;
 
 use serde_json::Value;
 use single_instance::SingleInstance;
-use reqwest::header;
+use reqwest::{blocking::Client, blocking::ClientBuilder, header};
 
 static APP_USER_AGENT: &str = concat!(
 	env!("CARGO_PKG_NAME"),
@@ -13,7 +14,7 @@ static APP_USER_AGENT: &str = concat!(
 	env!("CARGO_PKG_VERSION")
 );
 
-struct ArchifyConf{
+pub struct ArchifyConf{
 	archify_id: String,
 	archify_secret: String
 }
@@ -35,14 +36,14 @@ fn extract_configuration() -> ArchifyConf{
 }
 
 fn create_spotify_api_header() -> header::HeaderMap{
-	let mut spotify_HTTP_header = header::HeaderMap::new();
+	let mut spotify_http_header = header::HeaderMap::new();
 
-	spotify_HTTP_header.insert(
+	spotify_http_header.insert(
 		header::ACCEPT,
 		header::HeaderValue::from_static("application/json")
 	);
 
-	spotify_HTTP_header
+	spotify_http_header
 
 }
 
@@ -56,12 +57,12 @@ fn verify_single_instance() -> SingleInstance{
 	instance
 }
 
-fn create_client(default_header: header::HeaderMap) -> reqwest::Client {
-	let client: reqwest::ClientBuilder;
+fn create_client(default_header: header::HeaderMap) -> Client {
+	let client: ClientBuilder;
 
 
 	#[cfg(not(feature = "proxy"))]{
-		client = reqwest::Client::builder()
+		client = Client::builder()
 			.user_agent(APP_USER_AGENT)
 			.default_headers(default_header);
 	}
@@ -85,14 +86,16 @@ fn main() {
    let conf = extract_configuration();
    let default_spot_header = create_spotify_api_header();
 
-   let spotify_client = create_client(default_spot_header);
+   let mut spotify_client = create_client(default_spot_header);
+
+	let _app_token = spotify::authentication::get_app_token(&mut spotify_client, &conf);
 
    let args = arguments::parse_args();
 
    match args{
-	   arguments::Args::NewPlaylist(playlists) => println!("Not available yet!"),
+	   arguments::Args::NewPlaylist(_playlists) => println!("Not available yet!"),
 	   arguments::Args::Update => println!("Not available yet!"),
-	   arguments::Args::DeletePlaylist(playlists) => println!("Not available yet!")
+	   arguments::Args::DeletePlaylist(_playlists) => println!("Not available yet!")
    }
 
 }
