@@ -28,6 +28,4 @@ fn main() {
 
    let api = extract_configuration();
 
-   println!("API_ID:		{}", api.archify_id);
-   println!("API_SECRET:	{}", api.archify_secret);
 }
