@@ -1,6 +1,8 @@
-use std::{fs::File, io::Read};
+use std::fs::File;
+use std::io::Read;
 
 use serde_json::Value;
+use single_instance::SingleInstance;
 use reqwest::header;
 
 struct ArchifyApi{
@@ -34,8 +36,19 @@ fn create_spotify_api_header() -> header::HeaderMap{
 
 }
 
+fn verify_single_instance() -> SingleInstance{
+	let instance = SingleInstance::new("archify").unwrap();
+
+	if !instance.is_single(){
+		panic!("Only one instance of archify must run at the same time!")
+	}
+
+	instance
+}
+
 fn main() {
    println!("Welcome to archify!");
+   let _instance  = verify_single_instance();
 
    let api = extract_configuration();
    let default_spot_header = create_spotify_api_header();
