@@ -22,11 +22,22 @@ fn extract_configuration() -> ArchifyApi{
 	}
 }
 
+fn create_spotify_api_header() -> header::HeaderMap{
+	let mut spotify_HTTP_header = header::HeaderMap::new();
 
+	spotify_HTTP_header.insert(
+		header::ACCEPT,
+		header::HeaderValue::from_static("application/json")
+	);
+
+	spotify_HTTP_header
+
+}
 
 fn main() {
    println!("Welcome to archify!");
 
    let api = extract_configuration();
+   let default_spot_header = create_spotify_api_header();
 
 }
