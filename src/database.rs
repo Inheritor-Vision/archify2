@@ -23,11 +23,34 @@ impl Database {
 
 	fn create_tables(&self){
 		self.client.execute("CREATE TABLE IF NOT EXISTS spotify_tokens (user_id TEXT, access_token TEXT, refresh_token TEXT, token_type TEXT, expires_in BIGINT, received_at TIMESTAMP, PRIMARY KEY (user_id))", ()).unwrap();
-		self.client.execute("CREATE TABLE IF NOT EXISTS playlists (playlist_id TEXT, playlist_SHA256 BYTEA, timestamp TIMESTAMP, playlist_data TEXT, PRIMARY KEY (playlist_id, timestamp))", ()).unwrap();
+		self.client.execute("CREATE TABLE IF NOT EXISTS playlists (playlist_id TEXT, playlist_SHA256 BLOB, timestamp TIMESTAMP, playlist_data TEXT, PRIMARY KEY (playlist_id, timestamp))", ()).unwrap();
+	}
+
+	pub fn set_unique_empty_playlist(&self, playlist_id: &String){
+
+		let res = self.client.query_row(
+			"SELECT * FROM playlists WHERE playlist_id = ?1",
+			params![
+				playlist_id
+			],
+			|_| Result::Ok(0) 
+		);
+
+		match res {
+			Result::Ok(_) => (),
+			Result::Err(_) => {
+				self.client.execute(
+					"INSERT INTO playlists (playlist_id, timestamp) VALUES (?1, ?2)", 
+					params![
+						playlist_id.as_str(),
+						CONF_TIME_BIG_BANG
+					]
+				).unwrap();
+			}
+		};
 	}
 
 	pub fn update_app_token(&self, token: &Token){
-		println!("Token updated!");
 		self.client.execute(
 			"INSERT OR REPLACE INTO spotify_tokens (access_token, token_type, expires_in, received_at, user_id) VALUES (?1, ?2, ?3, ?4, ?5)", 
 			params![

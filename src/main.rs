@@ -90,6 +90,13 @@ fn create_client(default_header: header::HeaderMap) -> Client {
 	client.build().unwrap()
 }
 
+fn add_playlist(db: &database::Database, playlist_ids: Vec<String>){
+
+		for p_id in playlist_ids{
+			db.set_unique_empty_playlist(&p_id);
+		}
+}
+
 fn main() {
 	println!("Welcome to archify!");
 	let _instance  = verify_single_instance();
@@ -121,7 +128,7 @@ fn main() {
 	let _app_token = spotify::authentication::get_app_token(&mut spotify_client, &conf);
 
 	match args{
-		arguments::Args::NewPlaylist(_playlists) => println!("Not available yet!"),
+		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
 		arguments::Args::Update => println!("Not available yet!"),
 		arguments::Args::DeletePlaylist(_playlists) => println!("Not available yet!")
 	}
