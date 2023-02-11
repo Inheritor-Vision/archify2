@@ -97,10 +97,27 @@ fn main() {
 	let args = arguments::parse_args();
 	let conf = extract_configuration();
 	let default_spot_header = create_spotify_api_header();
-	let _db = database::Database::new();
+	let db = database::Database::new();
 
 	let mut spotify_client = create_client(default_spot_header);
 
+	let token = db.get_app_token();
+	let _token = match token {
+		Some(t) => {
+			if spotify::authentication::is_access_token_expired(&t){
+				let l_t = spotify::authentication::get_app_token(&mut spotify_client, &conf);
+				db.update_app_token(&l_t);
+				l_t
+			}else{
+				t
+			}
+		},
+		None => {
+			let l_t = spotify::authentication::get_app_token(&mut spotify_client, &conf);
+			db.update_app_token(&l_t);
+			l_t
+		}
+	};
 	let _app_token = spotify::authentication::get_app_token(&mut spotify_client, &conf);
 
 	match args{

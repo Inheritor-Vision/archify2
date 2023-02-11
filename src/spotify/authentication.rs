@@ -70,3 +70,12 @@ pub fn get_app_token(client: &mut Client, conf: &ArchifyConf) -> Token {
 
 	token
 }
+
+pub fn is_access_token_expired(token: &Token) -> bool {
+	let time = SystemTime::now()
+		.duration_since(UNIX_EPOCH)
+		.unwrap()
+		.as_secs();
+
+	time > token.received_at + token.token.expires_in
+}
