@@ -15,7 +15,7 @@ pub type Playlists = Vec<Playlist>;
 
 
 pub struct Database {
-	pub client: Connection
+	client: Connection
 }
 
 
