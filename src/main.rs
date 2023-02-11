@@ -112,6 +112,15 @@ fn add_playlist(db: &database::Database, playlist_ids: Vec<String>){
 	}
 }
 
+fn delete_playlist(db: &database::Database, playlist_ids: Vec<String>){
+	for p in playlist_ids{
+		match parse_url(&p){
+			Some(p_url) => db.delete_playlist(&p_url),
+			None => ()
+		}
+	}
+}
+
 fn main() {
 	println!("Welcome to archify!");
 	let _instance  = verify_single_instance();
@@ -145,7 +154,7 @@ fn main() {
 	match args{
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
 		arguments::Args::Update => println!("Not available yet!"),
-		arguments::Args::DeletePlaylist(_playlists) => println!("Not available yet!")
+		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists)
 	}
 
 }

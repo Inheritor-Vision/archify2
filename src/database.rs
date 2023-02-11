@@ -50,6 +50,13 @@ impl Database {
 		};
 	}
 
+	pub fn delete_playlist(&self, playlist_id: &String){
+		self.client.execute(
+			"DELETE FROM playlists WHERE playlist_id = ?1",
+			params![playlist_id]
+		).unwrap();
+	}
+
 	pub fn update_app_token(&self, token: &Token){
 		self.client.execute(
 			"INSERT OR REPLACE INTO spotify_tokens (access_token, token_type, expires_in, received_at, user_id) VALUES (?1, ?2, ?3, ?4, ?5)", 
