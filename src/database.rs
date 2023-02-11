@@ -61,6 +61,18 @@ impl Database {
 		};
 	}
 
+	pub fn set_playlist(&self, playlist: &Playlist){
+		self.client.execute(
+			"INSERT INTO playlists (playlist_id, playlist_SHA256, timestamp, playlist_data) VALUES (?1, ?2, ?3, ?4)",
+			params![
+				playlist.id,
+				playlist.sha256,
+				playlist.timestamp,
+				playlist.data
+			]
+		).unwrap();
+	}
+
 	pub fn delete_playlist(&self, playlist_id: &String){
 		self.client.execute(
 			"DELETE FROM playlists WHERE playlist_id = ?1",

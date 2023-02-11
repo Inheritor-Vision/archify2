@@ -4,6 +4,7 @@ mod database;
 mod spotify;
 
 use conf::*;
+use spotify::authentication::Token;
 
 use std::{fs::File, str::FromStr};
 use std::io::Read;
@@ -121,6 +122,18 @@ fn delete_playlist(db: &database::Database, playlist_ids: Vec<String>){
 	}
 }
 
+fn update_playlists(db: &database::Database, client: &Client, token: &Token){
+	let playlists = db.get_latest_unique_playlists();
+
+	for p in playlists{
+		let fresh_p = spotify::playlist_api::get_playlist_content_from_playlist_id(client, token, &p.id);
+
+		if p.sha256 != fresh_p.sha256{
+			db.set_playlist(&fresh_p);
+		}
+	}
+}
+
 fn main() {
 	println!("Welcome to archify!");
 	let _instance  = verify_single_instance();
@@ -133,7 +146,7 @@ fn main() {
 	let mut spotify_client = create_client(default_spot_header);
 
 	let token = db.get_app_token();
-	let _token = match token {
+	let token = match token {
 		Some(t) => {
 			if spotify::authentication::is_access_token_expired(&t){
 				let l_t = spotify::authentication::get_app_token(&mut spotify_client, &conf);
@@ -149,11 +162,10 @@ fn main() {
 			l_t
 		}
 	};
-	let _app_token = spotify::authentication::get_app_token(&mut spotify_client, &conf);
 
 	match args{
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
-		arguments::Args::Update => println!("Not available yet!"),
+		arguments::Args::Update => update_playlists(&db, &spotify_client, &token),
 		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists)
 	}
 

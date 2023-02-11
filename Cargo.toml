@@ -12,8 +12,9 @@ single-instance	= "^0.3.3"
 clap			= {version = "^4.1.4", features = ["derive"]}
 serde			= {version = "^1.0.152", features = ["derive"]}
 base64			= "^0.21.0"
-rusqlite		= "^0.28.0"
+rusqlite		= {version = "^0.28.0", features = ["serde_json"]}
 url				= "^2.3.1"
+sha2			= "^0.10.6"
 
 [features]
 proxy = []
