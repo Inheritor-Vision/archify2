@@ -70,6 +70,15 @@ fn verify_single_instance() -> SingleInstance{
 	instance
 }
 
+#[cfg(feature = "proxy")]
+fn get_certificate() -> reqwest::Certificate{
+	let mut buff = Vec::new();
+	File::open(CONF_DEBUG_CERT_PATH).unwrap().read_to_end(&mut buff).unwrap();
+	let cert = reqwest::Certificate::from_der(&buff).unwrap();
+
+	cert
+}
+
 fn create_client(default_header: header::HeaderMap) -> Client {
 	let client: ClientBuilder;
 

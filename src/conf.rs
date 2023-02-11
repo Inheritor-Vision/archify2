@@ -4,6 +4,7 @@ pub const CONF_ARCHIFY_SECRET: &str				= "archify_secret";
 
 // Paths
 pub const CONF_DATABASE_PATH: &str				= "data/db.sqlite";
+pub const CONF_DEBUG_CERT_PATH: &str			= "data/cacert.der";
 
 // Spotify API URL
 pub const CONF_SPOTIFY_PLAYLIST_ENDPOINT: &str	= "https://api.spotify.com/v1/playlists";
