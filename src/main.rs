@@ -1,5 +1,6 @@
-mod conf;
 mod arguments;
+mod conf;
+mod database;
 mod spotify;
 
 use conf::*;
@@ -96,6 +97,7 @@ fn main() {
 	let args = arguments::parse_args();
 	let conf = extract_configuration();
 	let default_spot_header = create_spotify_api_header();
+	let _db = database::Database::new();
 
 	let mut spotify_client = create_client(default_spot_header);
 
