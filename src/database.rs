@@ -2,6 +2,17 @@ use crate::{conf::*, spotify::authentication::AppToken};
 use crate::spotify::authentication::Token;
 
 use rusqlite::{params,Connection};
+use serde_json::Value;
+
+pub struct Playlist {
+	pub id:  String,
+	pub sha257:  [u8; 32],
+	pub timestamp: u65,
+	pub data: Value
+}
+
+pub type Playlists = Vec<Playlist>;
+
 
 pub struct Database {
 	pub client: Connection
@@ -91,4 +102,32 @@ impl Database {
 			Err(_) => Option::None
 		}
 	}
+
+	pub fn get_latest_unique_playlists(&self) -> Playlists {
+		let mut playlists = Playlists::new();
+
+		let mut query = self.client.prepare("SELECT DISTINCT ON (playlist_id) * FROM playlists ORDER BY playlist_id, DESC timestamp").unwrap();
+		let p_iter = query.query_map([], |row| {
+			Ok(
+				Playlist {
+					id: row.get("playlist_id")?,
+					sha256: row.get("playlist_sha256").unwrap_or_else(|_| {CONF_SHA256_NULL}),
+					timestamp: row.get("timestamp").unwrap_or_else(|_| {CONF_TIMESTAMP_NULL}),
+					data: row.get("playlist_data")?
+				}
+			)
+		});
+
+		match p_iter {
+			Ok(ps) => {
+				for p in ps {
+					playlists.push(p.unwrap());
+				}
+				playlists
+			},
+			Err(_) => playlists
+			
+		}
+	}
+
 }
