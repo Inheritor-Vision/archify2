@@ -1,8 +1,12 @@
+mod conf;
 mod arguments;
 mod spotify;
 
-use std::fs::File;
+use conf::*;
+
+use std::{fs::File, str::FromStr};
 use std::io::Read;
+use std::process::exit;
 
 use serde_json::Value;
 use single_instance::SingleInstance;
@@ -29,10 +33,16 @@ fn extract_configuration() -> ArchifyConf{
 
 	let json_api: Value = serde_json::from_str(&*buf).unwrap();
 
-	ArchifyConf { 
-		archify_id: json_api["archify_id"].to_string(), 
-		archify_secret: json_api["archify_id"].to_string() 
+	if json_api[CONF_ARCHIFY_ID].is_null() || json_api[CONF_ARCHIFY_SECRET].is_null(){
+		eprintln!("ERROR: Configuration file cannot be parsed correctly!");
+		exit(-1);
 	}
+
+	ArchifyConf { 
+		archify_id: String::from_str(json_api[CONF_ARCHIFY_ID].as_str().unwrap()).unwrap(), 
+		archify_secret: String::from_str(json_api[CONF_ARCHIFY_SECRET].as_str().unwrap()).unwrap() 
+	}
+
 }
 
 fn create_spotify_api_header() -> header::HeaderMap{
@@ -90,7 +100,6 @@ fn main() {
 	let mut spotify_client = create_client(default_spot_header);
 
 	let _app_token = spotify::authentication::get_app_token(&mut spotify_client, &conf);
-
 
 	match args{
 		arguments::Args::NewPlaylist(_playlists) => println!("Not available yet!"),
