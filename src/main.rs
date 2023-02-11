@@ -9,9 +9,10 @@ use std::{fs::File, str::FromStr};
 use std::io::Read;
 use std::process::exit;
 
+use reqwest::{blocking::Client, blocking::ClientBuilder, header};
 use serde_json::Value;
 use single_instance::SingleInstance;
-use reqwest::{blocking::Client, blocking::ClientBuilder, header};
+use url::{Url};
 
 static APP_USER_AGENT: &str = concat!(
 	env!("CARGO_PKG_NAME"),
@@ -90,11 +91,25 @@ fn create_client(default_header: header::HeaderMap) -> Client {
 	client.build().unwrap()
 }
 
-fn add_playlist(db: &database::Database, playlist_ids: Vec<String>){
+fn parse_url(url: &String) -> Option<String>{
+	let parsed_url = Url::parse(url).unwrap();
+	let segments = parsed_url.path_segments().map(|c| c.collect::<Vec<_>>()).unwrap();
 
-		for p_id in playlist_ids{
-			db.set_unique_empty_playlist(&p_id);
+	if segments[0] == "playlist" {
+		Option::Some(String::from(segments[1]))
+	}else{
+		None
+	}
+
+}
+
+fn add_playlist(db: &database::Database, playlist_ids: Vec<String>){
+	for p in playlist_ids{
+		match parse_url(&p){
+			Some(p_url) => db.set_unique_empty_playlist(&p_url),
+			None => ()
 		}
+	}
 }
 
 fn main() {
