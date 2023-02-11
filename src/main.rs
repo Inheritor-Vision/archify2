@@ -80,22 +80,22 @@ fn create_client(default_header: header::HeaderMap) -> Client {
 }
 
 fn main() {
-   println!("Welcome to archify!");
-   let _instance  = verify_single_instance();
+	println!("Welcome to archify!");
+	let _instance  = verify_single_instance();
 
-   let conf = extract_configuration();
-   let default_spot_header = create_spotify_api_header();
+	let args = arguments::parse_args();
+	let conf = extract_configuration();
+	let default_spot_header = create_spotify_api_header();
 
-   let mut spotify_client = create_client(default_spot_header);
+	let mut spotify_client = create_client(default_spot_header);
 
 	let _app_token = spotify::authentication::get_app_token(&mut spotify_client, &conf);
 
-   let args = arguments::parse_args();
 
-   match args{
-	   arguments::Args::NewPlaylist(_playlists) => println!("Not available yet!"),
-	   arguments::Args::Update => println!("Not available yet!"),
-	   arguments::Args::DeletePlaylist(_playlists) => println!("Not available yet!")
-   }
+	match args{
+		arguments::Args::NewPlaylist(_playlists) => println!("Not available yet!"),
+		arguments::Args::Update => println!("Not available yet!"),
+		arguments::Args::DeletePlaylist(_playlists) => println!("Not available yet!")
+	}
 
 }
