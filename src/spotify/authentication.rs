@@ -30,12 +30,12 @@ fn add_app_authorization(headers: &mut header::HeaderMap, conf: &ArchifyConf){
 		"Basic {}", general_purpose::STANDARD.encode(
 			format!(
 				"{}:{}",
-				conf.archify_id,
-				conf.archify_secret
+				conf.archify_id.as_str(),
+				conf.archify_secret.as_str()
 			)
 		)
 	);
-
+	
 	let mut auth = header::HeaderValue::from_str(&auth_value).unwrap();
 	auth.set_sensitive(true);
 
@@ -45,7 +45,7 @@ fn add_app_authorization(headers: &mut header::HeaderMap, conf: &ArchifyConf){
 pub fn get_app_token(client: &mut Client, conf: &ArchifyConf) -> Token {
 	let mut headers = header::HeaderMap::new();
 	
-	add_app_authorization(&mut headers, conf);
+	add_app_authorization(&mut headers, &conf);
 
 	let time = SystemTime::now()
 	.duration_since(UNIX_EPOCH)
