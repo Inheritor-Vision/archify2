@@ -6,8 +6,8 @@ use serde_json::Value;
 
 pub struct Playlist {
 	pub id:  String,
-	pub sha257:  [u8; 32],
-	pub timestamp: u65,
+	pub sha256:  [u8; 32],
+	pub timestamp: u64,
 	pub data: Value
 }
 
