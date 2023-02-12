@@ -4,19 +4,22 @@ mod database;
 mod spotify;
 
 use conf::*;
+use env_logger::fmt::Color;
 use spotify::authentication::Token;
 
 use std::env;
 use std::str::FromStr;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::process::exit;
 
-use log::{ info, error, debug, warn };
+use chrono::Local;
+use env_logger::Builder;
+use log::{Level, error};
 use reqwest::{blocking::Client, blocking::ClientBuilder, header};
 use serde_json::Value;
 use single_instance::SingleInstance;
-use url::{Url};
+use url::Url;
 
 static APP_USER_AGENT: &str = concat!(
 	env!("CARGO_PKG_NAME"),
@@ -152,7 +155,26 @@ fn main() {
 
 	#[cfg(debug_assertions)]
 	env::set_var("RUST_LOG", "debug");
-	env_logger::init();
+	Builder::from_default_env().format(|buf, record|{
+		let mut style = buf.style();
+		let level = match record.level() {
+			Level::Error => style.set_color(Color::Red).value(Level::Error),
+			Level::Warn => style.set_color(Color::Yellow).value(Level::Warn),
+			Level::Info => style.set_color(Color::Green).value(Level::Info),
+			Level::Debug => style.set_color(Color::Blue).value(Level::Debug),
+			Level::Trace => style.set_color(Color::Cyan).value(Level::Trace),
+		};
+		let mut style = buf.style();
+		style.set_color(Color::Magenta);
+		writeln!(
+			buf, 
+			"[{}] {: <5} - {} ({})",
+			Local::now().format("%v %X"),
+			level,
+			record.args(),
+			style.value(record.module_path().unwrap_or_else(|| {"Uknown file"}))
+		)
+	}).init();
 
 	let _instance  = verify_single_instance();
 

@@ -49,7 +49,7 @@ impl Database {
 		);
 
 		match res {
-			Result::Ok(_) => info!("(DBS) Playlist {} is already present.", playlist_id),
+			Result::Ok(_) => info!(" Playlist {} is already present.", playlist_id),
 			Result::Err(_) => {
 				self.client.execute(
 					"INSERT INTO playlists (playlist_id, timestamp) VALUES (?1, ?2)", 
@@ -58,7 +58,7 @@ impl Database {
 						CONF_TIME_BIG_BANG
 					]
 				).unwrap();
-				info!("(DBS) Empty playlist {} inserted.", playlist_id);
+				info!("Empty playlist {} inserted.", playlist_id);
 			}
 		};
 	}
@@ -73,7 +73,7 @@ impl Database {
 				playlist.data
 			]
 		).unwrap();
-		info!("(DBS) Playlist {} inserted.", playlist.id);
+		info!("Playlist {} inserted.", playlist.id);
 	}
 
 	pub fn delete_playlist(&self, playlist_id: &String){
@@ -81,7 +81,7 @@ impl Database {
 			"DELETE FROM playlists WHERE playlist_id = ?1",
 			params![playlist_id]
 		).unwrap();
-		info!("(DBS) Playlist(s) {} deleted.", playlist_id);
+		info!("Playlist(s) {} deleted.", playlist_id);
 	}
 
 	pub fn update_app_token(&self, token: &Token){
@@ -95,7 +95,7 @@ impl Database {
 				CONF_ARCHIFY_ID
 			]
 		).unwrap();
-		info!("(DBS) App token replaced.");
+		info!("App token replaced.");
 	}
 
 	pub fn get_app_token(&self) -> Option<Token> {
@@ -115,8 +115,8 @@ impl Database {
 		);
 
 		match res {
-			Ok(r) => {info!("(DBS) App token retreived."); r},
-			Err(_) => {info!("(DBS) App token not found."); Option::None}
+			Ok(r) => {info!("App token retreived."); r},
+			Err(_) => {info!("App token not found."); Option::None}
 		}
 	}
 
@@ -140,10 +140,10 @@ impl Database {
 				for p in ps {
 					playlists.push(p.unwrap());
 				}
-				info!("(DBS) {} playlists retreived.", playlists.len());
+				info!("{} playlists retreived.", playlists.len());
 				playlists
 			},
-			Err(_) => {info!("(DBS) No playlist found."); playlists}
+			Err(_) => {info!("No playlist found."); playlists}
 			
 		}
 	}

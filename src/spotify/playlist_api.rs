@@ -46,7 +46,7 @@ pub fn get_playlist_content_from_playlist_id(client: &Client, token: &Token, pla
 		.text()
 		.unwrap();
 
-	debug!("(API) Received data from API: {}", body.as_str().len());
+	debug!("Received data from API: {}", body.as_str().len());
 
 	let json: Tracks = serde_json::from_str(body.as_str()).unwrap();
 	let json_raw: Value = serde_json::from_str(body.as_str()).unwrap();
@@ -56,13 +56,13 @@ pub fn get_playlist_content_from_playlist_id(client: &Client, token: &Token, pla
 	for i in &json.tracks.items{
 		match &i.track.id {
 			Some(id) => hasher.update(id.as_bytes()),
-			None => info!("(API) Null song ID skipped in playlist {}.", playlist_id)
+			None => info!("Null song ID skipped in playlist {}.", playlist_id)
 		}
 	}
 
 	let sha256 = hasher.finalize();
 
-	info!("(API) Playlist {} retreived.", playlist_id);
+	info!("Playlist {} retreived.", playlist_id);
 
 	Playlist { 
 		id: playlist_id.clone(), 

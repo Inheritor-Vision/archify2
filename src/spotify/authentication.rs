@@ -69,7 +69,7 @@ pub fn get_app_token(client: &mut Client, conf: &ArchifyConf) -> Token {
 		client_id: conf.archify_id.clone() 
 	};
 
-	info!("(API) Token has been retreived.");
+	info!("Token has been retreived.");
 
 	token
 }
@@ -81,7 +81,7 @@ pub fn is_access_token_expired(token: &Token) -> bool {
 		.as_secs();
 
 	let res = time > token.received_at + token.token.expires_in;
-	info!("(API) Token expired: {}", res);
+	info!("Token expired: {}", res);
 
 	res
 }
