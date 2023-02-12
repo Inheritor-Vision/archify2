@@ -3,6 +3,7 @@ use crate::ArchifyConf;
 use std::{time::{SystemTime, UNIX_EPOCH}};
 
 use base64::{Engine as _, engine::general_purpose};
+use log::info;
 use reqwest::{blocking::Client, header};
 use serde::{Deserialize};
 
@@ -68,6 +69,8 @@ pub fn get_app_token(client: &mut Client, conf: &ArchifyConf) -> Token {
 		client_id: conf.archify_id.clone() 
 	};
 
+	info!("(API) Token has been retreived.");
+
 	token
 }
 
@@ -77,5 +80,8 @@ pub fn is_access_token_expired(token: &Token) -> bool {
 		.unwrap()
 		.as_secs();
 
-	time > token.received_at + token.token.expires_in
+	let res = time > token.received_at + token.token.expires_in;
+	info!("(API) Token expired: {}", res);
+
+	res
 }

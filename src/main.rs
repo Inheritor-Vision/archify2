@@ -6,10 +6,13 @@ mod spotify;
 use conf::*;
 use spotify::authentication::Token;
 
-use std::{fs::File, str::FromStr};
+use std::env;
+use std::str::FromStr;
+use std::fs::File;
 use std::io::Read;
 use std::process::exit;
 
+use log::{ info, error, debug, warn };
 use reqwest::{blocking::Client, blocking::ClientBuilder, header};
 use serde_json::Value;
 use single_instance::SingleInstance;
@@ -37,7 +40,7 @@ fn extract_configuration() -> ArchifyConf{
 	let json_api: Value = serde_json::from_str(&*buf).unwrap();
 
 	if json_api[CONF_ARCHIFY_ID].is_null() || json_api[CONF_ARCHIFY_SECRET].is_null(){
-		eprintln!("ERROR: Configuration file cannot be parsed correctly!");
+		error!("Configuration file cannot be parsed correctly!");
 		exit(-1);
 	}
 
@@ -64,7 +67,8 @@ fn verify_single_instance() -> SingleInstance{
 	let instance = SingleInstance::new("archify").unwrap();
 
 	if !instance.is_single(){
-		panic!("Only one instance of archify must run at the same time!")
+		error!("Only one instance of archify must run at the same time!");
+		exit(-1);
 	}
 
 	instance
@@ -145,6 +149,11 @@ fn update_playlists(db: &database::Database, client: &Client, token: &Token){
 
 fn main() {
 	println!("Welcome to archify!");
+
+	#[cfg(debug_assertions)]
+	env::set_var("RUST_LOG", "debug");
+	env_logger::init();
+
 	let _instance  = verify_single_instance();
 
 	let args = arguments::parse_args();

@@ -4,6 +4,7 @@ use crate::spotify::authentication::Token;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use log::info;
 use reqwest::{header, blocking::Client};
 use serde::Deserialize;
 use serde_json::Value;
@@ -55,6 +56,8 @@ pub fn get_playlist_content_from_playlist_id(client: &Client, token: &Token, pla
 	}
 
 	let sha256 = hasher.finalize();
+
+	info!("(API) Playlist {} retreived.", playlist_id);
 
 	Playlist { 
 		id: playlist_id.clone(), 
