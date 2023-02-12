@@ -5,6 +5,9 @@ In dev.
 # TODO
 
 - Add option for log level
+- Log change format
+- For now only X first song of a playlist are recoved, check API limitation and do multiple requests
+- Do not store the JSON output, but a siplified one (like only an array of ids)
 - Change how secrets are handled (check GITHUB secrets)
 - Store playlist name
 - Add an option to list all playlists monitored

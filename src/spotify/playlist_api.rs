@@ -4,7 +4,7 @@ use crate::spotify::authentication::Token;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use log::info;
+use log::{info, debug};
 use reqwest::{header, blocking::Client};
 use serde::Deserialize;
 use serde_json::Value;
@@ -12,7 +12,7 @@ use sha2::{Sha256, Digest};
 
 #[derive(Deserialize)]
 struct Id{
-	id: String
+	id: Option<String>
 }
 
 #[derive(Deserialize)]
@@ -46,13 +46,18 @@ pub fn get_playlist_content_from_playlist_id(client: &Client, token: &Token, pla
 		.text()
 		.unwrap();
 
+	debug!("(API) Received data from API: {}", body.as_str().len());
+
 	let json: Tracks = serde_json::from_str(body.as_str()).unwrap();
 	let json_raw: Value = serde_json::from_str(body.as_str()).unwrap();
 	
 	let mut hasher = Sha256::new();
 
 	for i in &json.tracks.items{
-		hasher.update(i.track.id.as_bytes());
+		match &i.track.id {
+			Some(id) => hasher.update(id.as_bytes()),
+			None => info!("(API) Null song ID skipped in playlist {}.", playlist_id)
+		}
 	}
 
 	let sha256 = hasher.finalize();
