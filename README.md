@@ -4,6 +4,7 @@ In dev.
 
 # TODO
 
+- Use rspotify everywhere!
 - Add option for log level
 - Log change format
 - For now only X first song of a playlist are recoved, check API limitation and do multiple requests
