@@ -4,8 +4,8 @@ mod database;
 mod spotify;
 
 use conf::*;
-use env_logger::fmt::Color;
-use spotify::authentication::Token;
+use rspotify::model::PlaylistId;
+use spotify::get_spotify_client_from_client_credentials;
 
 use std::env;
 use std::str::FromStr;
@@ -15,17 +15,13 @@ use std::process::exit;
 
 use chrono::Local;
 use env_logger::Builder;
+use env_logger::fmt::Color;
 use log::{Level, error};
-use reqwest::{blocking::Client, blocking::ClientBuilder, header};
+use rspotify::ClientCredsSpotify;
 use serde_json::Value;
 use single_instance::SingleInstance;
+use tokio::runtime::Runtime;
 use url::Url;
-
-static APP_USER_AGENT: &str = concat!(
-	env!("CARGO_PKG_NAME"),
-	"/",
-	env!("CARGO_PKG_VERSION")
-);
 
 pub struct ArchifyConf{
 	archify_id: String,
@@ -54,18 +50,6 @@ fn extract_configuration() -> ArchifyConf{
 
 }
 
-fn create_spotify_api_header() -> header::HeaderMap{
-	let mut spotify_http_header = header::HeaderMap::new();
-
-	spotify_http_header.insert(
-		header::ACCEPT,
-		header::HeaderValue::from_static("application/json")
-	);
-
-	spotify_http_header
-
-}
-
 fn verify_single_instance() -> SingleInstance{
 	let instance = SingleInstance::new("archify").unwrap();
 
@@ -75,37 +59,6 @@ fn verify_single_instance() -> SingleInstance{
 	}
 
 	instance
-}
-
-#[cfg(feature = "proxy")]
-fn get_certificate() -> reqwest::Certificate{
-	let mut buff = Vec::new();
-	File::open(CONF_DEBUG_CERT_PATH).unwrap().read_to_end(&mut buff).unwrap();
-	let cert = reqwest::Certificate::from_der(&buff).unwrap();
-
-	cert
-}
-
-fn create_client(default_header: header::HeaderMap) -> Client {
-	let client: ClientBuilder;
-
-
-	#[cfg(not(feature = "proxy"))]{
-		client = Client::builder()
-			.user_agent(APP_USER_AGENT)
-			.default_headers(default_header);
-	}
-	
-	#[cfg(feature = "proxy")]{
-		client = Client::builder()
-			.user_agent(APP_USER_AGENT)
-			.default_headers(default_header)
-			.proxy(reqwest::Proxy::http("http://127.0.0.1:8080").unwrap())
-			.proxy(reqwest::Proxy::https("http://127.0.0.1:8080").unwrap())
-			.add_root_certificate(get_certificate());
-	} 
-
-	client.build().unwrap()
 }
 
 fn parse_url(url: &String) -> Option<String>{
@@ -123,7 +76,7 @@ fn parse_url(url: &String) -> Option<String>{
 fn add_playlist(db: &database::Database, playlist_ids: Vec<String>){
 	for p in playlist_ids{
 		match parse_url(&p){
-			Some(p_url) => db.set_unique_empty_playlist(&p_url),
+			Some(p_url) => db.set_unique_empty_playlist(&PlaylistId::from_id(p_url).unwrap()),
 			None => ()
 		}
 	}
@@ -132,17 +85,17 @@ fn add_playlist(db: &database::Database, playlist_ids: Vec<String>){
 fn delete_playlist(db: &database::Database, playlist_ids: Vec<String>){
 	for p in playlist_ids{
 		match parse_url(&p){
-			Some(p_url) => db.delete_playlist(&p_url),
+			Some(p_url) => db.delete_playlist(&PlaylistId::from_id(p_url).unwrap()),
 			None => ()
 		}
 	}
 }
 
-fn update_playlists(db: &database::Database, client: &Client, token: &Token){
+async fn update_playlists(db: &database::Database, client: &ClientCredsSpotify){
 	let playlists = db.get_latest_unique_playlists();
 
 	for p in playlists{
-		let fresh_p = spotify::playlist_api::get_playlist_content_from_playlist_id(client, token, &p.id);
+		let fresh_p = spotify::get_public_playlists(&client, &p.id).await;
 
 		if p.sha256 != fresh_p.sha256{
 			db.set_playlist(&fresh_p);
@@ -155,6 +108,12 @@ fn main() {
 
 	#[cfg(debug_assertions)]
 	env::set_var("RUST_LOG", "debug");
+
+	#[cfg(feature = "proxy")]{
+		env::set_var("HTTP_PROXY", REQWEST_ENV_HTTP_PROXY);
+		env::set_var("HTTPS_PROXY", REQWEST_ENV_HTTPS_PROXY);
+	}
+
 	Builder::from_default_env().format(|buf, record|{
 		let mut style = buf.style();
 		let level = match record.level() {
@@ -180,32 +139,13 @@ fn main() {
 
 	let args = arguments::parse_args();
 	let conf = extract_configuration();
-	let default_spot_header = create_spotify_api_header();
+	let spot_client = Runtime::new().unwrap().block_on(get_spotify_client_from_client_credentials(conf));
+
 	let db = database::Database::new();
-
-	let mut spotify_client = create_client(default_spot_header);
-
-	let token = db.get_app_token();
-	let token = match token {
-		Some(t) => {
-			if spotify::authentication::is_access_token_expired(&t){
-				let l_t = spotify::authentication::get_app_token(&mut spotify_client, &conf);
-				db.update_app_token(&l_t);
-				l_t
-			}else{
-				t
-			}
-		},
-		None => {
-			let l_t = spotify::authentication::get_app_token(&mut spotify_client, &conf);
-			db.update_app_token(&l_t);
-			l_t
-		}
-	};
 
 	match args{
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
-		arguments::Args::Update => update_playlists(&db, &spotify_client, &token),
+		arguments::Args::Update => Runtime::new().unwrap().block_on(update_playlists(&db, &spot_client)),
 		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists)
 	}
 

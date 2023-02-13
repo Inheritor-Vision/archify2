@@ -1,19 +1,28 @@
-use serde_json::{Value, json};
+use rspotify::model::FullPlaylist;
+
 
 // Dynamic Configuration Fields
-pub const CONF_ARCHIFY_ID: &str					= "archify_id";
-pub const CONF_ARCHIFY_SECRET: &str				= "archify_secret";
+pub const CONF_ARCHIFY_ID: &str								= "archify_id";
+pub const CONF_ARCHIFY_SECRET: &str							= "archify_secret";
 
 // Paths
-pub const CONF_DATABASE_PATH: &str				= "data/db.sqlite";
-#[cfg(feature = "proxy")]
-pub const CONF_DEBUG_CERT_PATH: &str			= "data/cacert.der";
+pub const CONF_DATABASE_PATH: &str							= "data/db.sqlite";
 
-// Spotify API URL
-pub const CONF_SPOTIFY_PLAYLIST_ENDPOINT: &str	= "https://api.spotify.com/v1/playlists";
+// RSPOTIFY
+pub const RSPOTIFY_ENV_CLIENT_ID: &str						= "RSPOTIFY_CLIENT_ID";
+pub const RSPOTIFY_ENV_CLIENT_SECRET: &str					= "RSPOTIFY_CLIENT_SECRET";
+pub const RSPOTIFY_CLIENT_TOKEN_PATH: &str					= "data/client_token.json";
+
+// Proxy
+#[cfg(feature = "proxy")]
+pub const REQWEST_ENV_HTTP_PROXY: &str					= "http://127.0.0.1:8080";
+#[cfg(feature = "proxy")]
+pub const REQWEST_ENV_HTTPS_PROXY: &str					= REQWEST_ENV_HTTP_PROXY;
+
 
 // Default Values
-pub const CONF_TIME_BIG_BANG: i64				= 0;
-pub const CONF_SHA256_NULL: [u8; 32]			= [0;32];
-pub const CONF_TIMESTAMP_NULL: u64				= 0;
-pub const CONF_NULL_PLAYLIST_DATA: Value 		= json!(null);
+pub const CONF_TIME_BIG_BANG: i64							= 0;
+pub const CONF_SHA256_NULL: [u8; 32]						= [0;32];
+pub const CONF_TIMESTAMP_NULL: u64							= 0;
+pub const CONF_NULL_PLAYLIST_DATA: Option<FullPlaylist> 	= None;
+pub const CONF_NULL_STRING: String							= String::new();

@@ -5,6 +5,8 @@ In dev.
 # TODO
 
 - Use rspotify everywhere!
+- rspotify "PlaylistId" might be able to parse URL. Not usre abou it. Doc unclear.
+- Certificate has been reimplemented for proxy. Check archify first version. It might be impossible to use it because we don't use reqwest directly, but through rspotify.
 - Add option for log level
 - Log change format
 - For now only X first song of a playlist are recoved, check API limitation and do multiple requests
