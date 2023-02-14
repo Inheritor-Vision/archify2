@@ -15,6 +15,9 @@ struct Cli {
 	/// List tracked playlists
 	#[arg(short,long,action,value_parser)]
 	list: bool,
+	/// List versions of a single tracked playlist
+	#[arg(short,long,action,value_parser)]
+	tracked: Option<String>,
 	/// Delete a playlist
 	#[arg(short,long,value_parser, num_args(1..))] 
 	delete_playlist: Option<Vec<String>>,
@@ -24,7 +27,8 @@ pub enum Args {
 	NewPlaylist(Vec<String>),
 	DeletePlaylist(Vec<String>),
 	Update,
-	List
+	List,
+	Tracked(String)
 }
 
 pub fn parse_args() -> Args{
@@ -39,6 +43,8 @@ pub fn parse_args() -> Args{
 		res = Args::DeletePlaylist(cli.delete_playlist.unwrap());
 	}else if cli.list {
 		res = Args::List;
+	} else if cli.tracked != None {
+		res = Args::Tracked(cli.tracked.unwrap());
 	}else{
 		let mut cmd = Cli::command();
 		cmd.error(

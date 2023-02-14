@@ -128,4 +128,48 @@ impl Database {
 		}
 	}
 
+	pub fn get_all_tracked_versions(&self, playlist_id: &PlaylistId) -> Playlists{
+		let serialized_id = serde_json::to_string(playlist_id).unwrap();
+		let mut playlists = Playlists::new();
+		let mut count: u64 = 0;
+
+		let mut query = self.client.prepare("SELECT playlist_id, playlist_sha256, timestamp, playlist_data FROM playlists WHERE playlist_id = ?1 ORDER BY timestamp ASC").unwrap();
+		let p_iter = query.query_map([serialized_id], |row| {
+			let res = Ok(
+				Playlist {
+					id: {
+						let res: String = row.get("playlist_id").unwrap();
+						serde_json::from_str(res.as_str()).unwrap()
+					},
+					sha256: row.get("playlist_sha256").unwrap_or_else(|_| {CONF_SHA256_NULL}),
+					timestamp: row.get("timestamp").unwrap_or_else(|_| {CONF_TIMESTAMP_NULL}),
+					count: count,
+					data: {
+						let res: String = row.get("playlist_data").unwrap_or_else(|_| {CONF_NULL_STRING});
+						if !res.is_empty() {
+							serde_json::from_str(res.as_str()).unwrap()
+						} else {
+							CONF_NULL_PLAYLIST_DATA
+						}
+					}
+				}
+			);
+			count += 1;
+			res
+		});
+
+		match p_iter {
+			Ok(ps) => {
+				for p in ps {
+					playlists.push(p.unwrap());
+				}
+				info!("{} latest unique playlists retreived.", playlists.len());
+				playlists
+			},
+			Err(_) => {info!("No playlist found in db."); playlists}
+			
+		}
+	}
+
 }
+

@@ -13,8 +13,9 @@ use std::str::FromStr;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::process::exit;
+use std::time::{UNIX_EPOCH, Duration};
 
-use chrono::Local;
+use chrono::{Local, DateTime};
 use env_logger::Builder;
 use env_logger::fmt::Color;
 use log::{Level, error, info};
@@ -117,6 +118,32 @@ async fn list_playlists(db: &database::Database){
 	}
 }
 
+fn list_tracked_versions(db: &database::Database, playlist_id: &String){
+	let p_id ;
+	if !PlaylistId::id_is_valid(playlist_id.as_str()){
+		p_id = PlaylistId::from_id(parse_url(playlist_id).unwrap()).unwrap();
+	}else{
+		p_id = PlaylistId::from_id(playlist_id).unwrap();
+	}
+
+	let playlists = db.get_all_tracked_versions(&p_id);
+
+	if playlists.is_empty(){
+		println!("No playlist with this id are recorded!");
+	}else if playlists.len() == 1 {
+		println!("Playlist has not been updated yet! Do an --update first.")
+	}else{
+		println!("List of tracked versions for [{}] - {}:", p_id.id(), playlists.get(1).unwrap().data.as_ref().unwrap().name);
+		for p in playlists{
+			if p.count != 0{
+				let date = DateTime::<Local>::from(UNIX_EPOCH + Duration::from_secs(p.timestamp));
+				let format_date = format!("{}", date.format("%v %X"));	
+				println!("[{}]: {}", p.count, format_date);
+			}
+		}
+	}
+}
+
 fn main() {
 	println!("Welcome to archify!");
 
@@ -161,7 +188,8 @@ fn main() {
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
 		arguments::Args::Update => Runtime::new().unwrap().block_on(update_playlists(&db, &spot_client)),
 		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists),
-		arguments::Args::List => Runtime::new().unwrap().block_on(list_playlists(&db))
+		arguments::Args::List => Runtime::new().unwrap().block_on(list_playlists(&db)),
+		arguments::Args::Tracked(playlist_id) => list_tracked_versions(&db, &playlist_id)
 	}
 
 }
