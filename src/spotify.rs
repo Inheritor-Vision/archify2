@@ -64,10 +64,11 @@ pub async fn get_public_playlists(client: &ClientCredsSpotify, playlist_id: &Pla
 	let fplaylist = client.playlist(playlist_id.clone_static(), None, None).await.unwrap();
 
 	info!("Playlist {playlist_id} retreived.");
-	#[cfg(debug_assertions)]{
-		let l_p = fplaylist.clone();
-		debug!("Content retreived: {l_p:#?}");
-	}
+	// To verbose
+	// #[cfg(debug_assertions)]{
+	// 	let l_p = fplaylist.clone();
+	// 	debug!("Content retreived: {l_p:#?}");
+	// }
 
 	let timestamp = SystemTime::now()
 		.duration_since(UNIX_EPOCH)
