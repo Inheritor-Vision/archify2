@@ -12,6 +12,9 @@ struct Cli {
 	/// Update playlists stored in database
 	#[arg(short,long,action,value_parser)]
 	update: bool,
+	/// List tracked playlists
+	#[arg(short,long,action,value_parser)]
+	list: bool,
 	/// Delete a playlist
 	#[arg(short,long,value_parser, num_args(1..))] 
 	delete_playlist: Option<Vec<String>>,
@@ -21,6 +24,7 @@ pub enum Args {
 	NewPlaylist(Vec<String>),
 	DeletePlaylist(Vec<String>),
 	Update,
+	List
 }
 
 pub fn parse_args() -> Args{
@@ -33,6 +37,8 @@ pub fn parse_args() -> Args{
 		res = Args::NewPlaylist(cli.add_playlist.unwrap());
 	}else if cli.delete_playlist != None {
 		res = Args::DeletePlaylist(cli.delete_playlist.unwrap());
+	}else if cli.list {
+		res = Args::List;
 	}else{
 		let mut cmd = Cli::command();
 		cmd.error(

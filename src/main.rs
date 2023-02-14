@@ -106,6 +106,17 @@ async fn update_playlists(db: &database::Database, client: &ClientCredsSpotify){
 	}
 }
 
+async fn list_playlists(db: &database::Database){
+	let playlists = db.get_latest_unique_playlists();
+	println!("List of tracked playlist:");
+	for p in playlists{
+		match p.data {
+			Some(data) => println!("[{}]: {}", p.id.id(), data.name),
+			None => println!("[{}]: ! Name not available, please --update first !", p.id.id())
+		}
+	}
+}
+
 fn main() {
 	println!("Welcome to archify!");
 
@@ -149,7 +160,8 @@ fn main() {
 	match args{
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
 		arguments::Args::Update => Runtime::new().unwrap().block_on(update_playlists(&db, &spot_client)),
-		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists)
+		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists),
+		arguments::Args::List => Runtime::new().unwrap().block_on(list_playlists(&db))
 	}
 
 }
