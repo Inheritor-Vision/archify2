@@ -46,7 +46,11 @@ pub async fn get_spotify_client_from_client_credentials(app_conf: ArchifyConf) -
 	};
 
 	match tok {
-		Some(_) => info!("Client token already cached."),
+		Some(token) => {
+			*spot_client.get_token().lock().await.unwrap() = Some(token);
+			info!("Client token already cached.");
+		}
+			,
 		None => {
 			spot_client.request_token().await.unwrap();
 			info!("Client token NOT cached. Retreived from Spotify API.");
@@ -57,7 +61,7 @@ pub async fn get_spotify_client_from_client_credentials(app_conf: ArchifyConf) -
 }
 
 pub async fn get_public_playlists(client: &ClientCredsSpotify, playlist_id: &PlaylistId<'static>) -> Playlist {
-	let fplaylist = client.playlist(playlist_id.clone_static(), Some("tracks.items(track(id))"), None).await.unwrap();
+	let fplaylist = client.playlist(playlist_id.clone_static(), None, None).await.unwrap();
 
 	info!("Playlist {playlist_id} retreived.");
 	#[cfg(debug_assertions)]{
