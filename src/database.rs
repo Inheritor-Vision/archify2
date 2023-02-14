@@ -49,7 +49,7 @@ impl Database {
 		);
 
 		match res {
-			Result::Ok(_) => info!(" Playlist {} is already present.", playlist_id),
+			Result::Ok(_) => info!("Playlist {} is already present.", playlist_id),
 			Result::Err(_) => {
 				self.client.execute(
 					"INSERT INTO playlists (playlist_id, timestamp, playlist_data) VALUES (?1, ?2, ?3)", 
