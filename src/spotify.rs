@@ -28,6 +28,8 @@ pub async fn get_spotify_client_from_client_credentials(app_conf: ArchifyConf) -
 	let mut path = PathBuf::new();
 	path.push(RSPOTIFY_CLIENT_TOKEN_PATH);
 
+	let token_exists = path.exists();
+
 	let config = Config{
 		prefix: String::from(DEFAULT_API_PREFIX),
 		cache_path: path,
@@ -37,7 +39,12 @@ pub async fn get_spotify_client_from_client_credentials(app_conf: ArchifyConf) -
 	};
 
 	let spot_client = ClientCredsSpotify::with_config(creds, config);
-	let tok = spot_client.read_token_cache().await.unwrap();
+
+	let tok = match token_exists {
+		true => spot_client.read_token_cache().await.unwrap(),
+		false => None
+	};
+
 	match tok {
 		Some(_) => info!("Client token already cached."),
 		None => {
