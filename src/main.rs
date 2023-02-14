@@ -5,6 +5,7 @@ mod spotify;
 
 use conf::*;
 use rspotify::model::PlaylistId;
+use rspotify::prelude::Id;
 use spotify::get_spotify_client_from_client_credentials;
 
 use std::env;
@@ -16,7 +17,7 @@ use std::process::exit;
 use chrono::Local;
 use env_logger::Builder;
 use env_logger::fmt::Color;
-use log::{Level, error};
+use log::{Level, error, info};
 use rspotify::ClientCredsSpotify;
 use serde_json::Value;
 use single_instance::SingleInstance;
@@ -99,6 +100,8 @@ async fn update_playlists(db: &database::Database, client: &ClientCredsSpotify){
 
 		if p.sha256 != fresh_p.sha256{
 			db.set_playlist(&fresh_p);
+		}else{
+			info!("Playlist {} SHA matching, not pushed to db.", p.id.id());
 		}
 	}
 }

@@ -76,7 +76,7 @@ impl Database {
 				serialized_data
 			]
 		).unwrap();
-		info!("Playlist {} inserted.", playlist.data.as_ref().unwrap().id.id());
+		info!("Playlist {} inserted.", playlist.id.id());
 	}
 
 	pub fn delete_playlist(&self, playlist_id: &PlaylistId){

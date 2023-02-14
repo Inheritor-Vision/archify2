@@ -6,7 +6,6 @@ use std::env;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use log::debug;
 use log::error;
 use log::info;
 use rspotify::model::{PlaylistId, PlayableItem};
@@ -63,7 +62,7 @@ pub async fn get_spotify_client_from_client_credentials(app_conf: ArchifyConf) -
 pub async fn get_public_playlists(client: &ClientCredsSpotify, playlist_id: &PlaylistId<'static>) -> Playlist {
 	let fplaylist = client.playlist(playlist_id.clone_static(), None, None).await.unwrap();
 
-	info!("Playlist {playlist_id} retreived.");
+	info!("Playlist {playlist_id} retreived, with {} tracks", fplaylist.tracks.items.len());
 	// To verbose
 	// #[cfg(debug_assertions)]{
 	// 	let l_p = fplaylist.clone();
