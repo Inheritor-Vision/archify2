@@ -7,7 +7,7 @@ use clap::{Parser, error::ErrorKind, CommandFactory};
 #[clap(arg_required_else_help = true)]
 struct Cli {
 	/// Add public playlist to archive
-	#[arg(long, value_parser, num_args(1..))]
+	#[arg(short, long, value_parser, num_args(1..))]
 	add_playlist: Option<Vec<String>>,
 	/// Update playlists stored in database
 	#[arg(short,long,action,value_parser)]
