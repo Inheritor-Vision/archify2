@@ -111,7 +111,7 @@ async fn list_playlists(db: &database::Database){
 	println!("List of tracked playlist:");
 	for p in playlists{
 		match p.data {
-			Some(data) => println!("[{}]: {}", p.id.id(), data.name),
+			Some(data) => println!("[{}]: {} ({} version(s))", p.id.id(), data.name, p.count - 1),
 			None => println!("[{}]: ! Name not available, please --update first !", p.id.id())
 		}
 	}

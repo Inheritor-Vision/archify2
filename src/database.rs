@@ -9,6 +9,7 @@ pub struct Playlist {
 	pub id: PlaylistId<'static>,
 	pub sha256:  [u8; 32],
 	pub timestamp: u64,
+	pub count: u64,
 	pub data: Option<FullPlaylist>
 }
 
@@ -91,7 +92,7 @@ impl Database {
 	pub fn get_latest_unique_playlists(&self) -> Playlists {
 		let mut playlists = Playlists::new();
 
-		let mut query = self.client.prepare("SELECT playlist_id, playlist_sha256, MAX(timestamp) as timestamp, playlist_data FROM playlists GROUP BY playlist_id").unwrap();
+		let mut query = self.client.prepare("SELECT playlist_id, playlist_sha256, MAX(timestamp) as timestamp, COUNT(playlist_id) as count, playlist_data FROM playlists GROUP BY playlist_id").unwrap();
 		let p_iter = query.query_map([], |row| {
 			Ok(
 				Playlist {
@@ -101,6 +102,7 @@ impl Database {
 					},
 					sha256: row.get("playlist_sha256").unwrap_or_else(|_| {CONF_SHA256_NULL}),
 					timestamp: row.get("timestamp").unwrap_or_else(|_| {CONF_TIMESTAMP_NULL}),
+					count: row.get("count").unwrap(),
 					data: {
 						let res: String = row.get("playlist_data").unwrap_or_else(|_| {CONF_NULL_STRING});
 						if !res.is_empty() {

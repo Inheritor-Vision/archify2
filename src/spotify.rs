@@ -113,6 +113,7 @@ pub async fn get_public_playlists(client: &ClientCredsSpotify, playlist_id: &Pla
 		id: playlist_id.clone_static(),
 		sha256: sha256.into(),
 		timestamp: timestamp,
+		count: CONF_DEFAULT_COUNT,
 		data: Some(fplaylist)
 	};
 

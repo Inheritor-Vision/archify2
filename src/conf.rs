@@ -26,3 +26,4 @@ pub const CONF_SHA256_NULL: [u8; 32]						= [0;32];
 pub const CONF_TIMESTAMP_NULL: u64							= 0;
 pub const CONF_NULL_PLAYLIST_DATA: Option<FullPlaylist> 	= None;
 pub const CONF_NULL_STRING: String							= String::new();
+pub const CONF_DEFAULT_COUNT: u64							= 0;
