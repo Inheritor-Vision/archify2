@@ -8,16 +8,19 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use log::error;
 use log::info;
+use rspotify::{AuthCodeSpotify, OAuth};
 use rspotify::model::{PlaylistId, PlayableItem};
+use rspotify::prelude::OAuthClient;
 use rspotify::prelude::{BaseClient,Id};
+use rspotify::scopes;
 use rspotify::{Credentials, ClientCredsSpotify, Config, DEFAULT_API_PREFIX, DEFAULT_PAGINATION_CHUNKS};
 use sha2::{Digest, Sha256};
 
 
 
-pub async fn get_spotify_client_from_client_credentials(app_conf: ArchifyConf) -> ClientCredsSpotify{
-	env::set_var(RSPOTIFY_ENV_CLIENT_ID, app_conf.archify_id);
-	env::set_var(RSPOTIFY_ENV_CLIENT_SECRET, app_conf.archify_secret);
+pub async fn get_spotify_client_from_client_credentials(app_conf: &ArchifyConf) -> ClientCredsSpotify{
+	env::set_var(RSPOTIFY_ENV_CLIENT_ID, &app_conf.archify_id);
+	env::set_var(RSPOTIFY_ENV_CLIENT_SECRET, &app_conf.archify_secret);
 
 	let creds = Credentials::from_env().unwrap();
 
@@ -57,6 +60,44 @@ pub async fn get_spotify_client_from_client_credentials(app_conf: ArchifyConf) -
 	}
 
 	spot_client
+}
+
+pub async fn get_spotify_client_from_user(app_conf: &ArchifyConf) -> AuthCodeSpotify{
+	let creds = Credentials::new(&app_conf.archify_id, &app_conf.archify_secret);
+
+	let oauth = OAuth{
+		redirect_uri: String::from(RSPOTIFY_REDIRECT_URI),
+		scopes: scopes!(&RSPOTIFY_SCOPES.join(" ")),
+		#[cfg(feature = "proxy")]
+		proxies: Some(String::from(REQWEST_ENV_HTTP_PROXY)),
+		..Default::default()
+	};
+
+	let mut path = PathBuf::new();
+	path.push(RSPOTIFY_USER_TOKEN_PATH);
+
+	let token_exists = path.exists();
+
+	let config = Config{
+		cache_path: path,
+		token_cached: true,
+		..Default::default()
+	};
+
+	let client = AuthCodeSpotify::with_config(creds, oauth, config);
+
+	let url = client.get_authorize_url(false).unwrap();
+	if token_exists{
+		// Spotify API seems to simply not care about revoked token :)
+		client.read_token_cache(true).await.unwrap();
+	}else{
+		client.prompt_for_token(&url).await.unwrap();
+		client.refresh_token().await.unwrap();
+		client.write_token_cache().await.unwrap();
+	}
+
+	client
+
 }
 
 pub async fn get_public_playlists(client: &ClientCredsSpotify, playlist_id: &PlaylistId<'static>) -> Playlist {

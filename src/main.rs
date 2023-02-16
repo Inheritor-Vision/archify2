@@ -176,13 +176,16 @@ fn main() {
 		)
 	}).init();
 
+
 	let _instance  = verify_single_instance();
 
 	let args = arguments::parse_args();
 	let conf = extract_configuration();
-	let spot_client = Runtime::new().unwrap().block_on(get_spotify_client_from_client_credentials(conf));
+	let spot_client = Runtime::new().unwrap().block_on(get_spotify_client_from_client_credentials(&conf));
 
 	let db = database::Database::new();
+
+	let _ = Runtime::new().unwrap().block_on(spotify::get_spotify_client_from_user(&conf));
 
 	match args{
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
