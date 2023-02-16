@@ -1,4 +1,3 @@
 /target
-data/config.json
-data/db.sqlite
+data/*
 Cargo.lock
