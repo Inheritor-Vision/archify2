@@ -93,8 +93,9 @@ fn delete_playlist(db: &database::Database, playlist_ids: Vec<String>){
 	}
 }
 
-async fn update_playlists(db: &database::Database, client: &ClientCredsSpotify){
+async fn update_playlists(db: &database::Database, conf: &ArchifyConf){
 	let playlists = db.get_latest_unique_playlists();
+	let client = Runtime::new().unwrap().block_on(get_spotify_client_from_client_credentials(&conf));
 
 	for p in playlists{
 		let fresh_p = spotify::get_public_playlists(&client, &p.id).await;
@@ -181,7 +182,6 @@ fn main() {
 
 	let args = arguments::parse_args();
 	let conf = extract_configuration();
-	let spot_client = Runtime::new().unwrap().block_on(get_spotify_client_from_client_credentials(&conf));
 
 	let db = database::Database::new();
 
@@ -189,7 +189,7 @@ fn main() {
 
 	match args{
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
-		arguments::Args::Update => Runtime::new().unwrap().block_on(update_playlists(&db, &spot_client)),
+		arguments::Args::Update => Runtime::new().unwrap().block_on(update_playlists(&db, &conf)),
 		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists),
 		arguments::Args::List => Runtime::new().unwrap().block_on(list_playlists(&db)),
 		arguments::Args::Tracked(playlist_id) => list_tracked_versions(&db, &playlist_id)
