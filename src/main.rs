@@ -19,7 +19,6 @@ use chrono::{Local, DateTime};
 use env_logger::Builder;
 use env_logger::fmt::Color;
 use log::{Level, error, info};
-use rspotify::ClientCredsSpotify;
 use serde_json::Value;
 use single_instance::SingleInstance;
 use tokio::runtime::Runtime;
@@ -95,7 +94,7 @@ fn delete_playlist(db: &database::Database, playlist_ids: Vec<String>){
 
 async fn update_playlists(db: &database::Database, conf: &ArchifyConf){
 	let playlists = db.get_latest_unique_playlists();
-	let client = Runtime::new().unwrap().block_on(get_spotify_client_from_client_credentials(&conf));
+	let client = get_spotify_client_from_client_credentials(&conf).await;
 
 	for p in playlists{
 		let fresh_p = spotify::get_public_playlists(&client, &p.id).await;
