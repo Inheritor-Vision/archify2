@@ -4,14 +4,17 @@ use crate::database::Playlist;
 
 use std::env;
 use std::path::PathBuf;
+use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use chrono::DateTime;
+use chrono::Local;
 use log::error;
 use log::info;
+use rspotify::Token;
 use rspotify::{AuthCodeSpotify, OAuth};
 use rspotify::model::{PlaylistId, PlayableItem};
-use rspotify::prelude::OAuthClient;
-use rspotify::prelude::{BaseClient,Id};
+use rspotify::prelude::{BaseClient,Id, OAuthClient, PlayableId};
 use rspotify::scopes;
 use rspotify::{Credentials, ClientCredsSpotify, Config, DEFAULT_API_PREFIX, DEFAULT_PAGINATION_CHUNKS};
 use sha2::{Digest, Sha256};
@@ -67,7 +70,7 @@ pub async fn get_spotify_client_from_user(app_conf: &ArchifyConf) -> AuthCodeSpo
 
 	let oauth = OAuth{
 		redirect_uri: String::from(RSPOTIFY_REDIRECT_URI),
-		scopes: scopes!(&RSPOTIFY_SCOPES.join(" ")),
+		scopes: scopes!(RSPOTIFY_SCOPES[0], RSPOTIFY_SCOPES[1], RSPOTIFY_SCOPES[2]),
 		#[cfg(feature = "proxy")]
 		proxies: Some(String::from(REQWEST_ENV_HTTP_PROXY)),
 		..Default::default()
@@ -75,8 +78,6 @@ pub async fn get_spotify_client_from_user(app_conf: &ArchifyConf) -> AuthCodeSpo
 
 	let mut path = PathBuf::new();
 	path.push(RSPOTIFY_USER_TOKEN_PATH);
-
-	let token_exists = path.exists();
 
 	let config = Config{
 		cache_path: path,
@@ -87,14 +88,9 @@ pub async fn get_spotify_client_from_user(app_conf: &ArchifyConf) -> AuthCodeSpo
 	let client = AuthCodeSpotify::with_config(creds, oauth, config);
 
 	let url = client.get_authorize_url(false).unwrap();
-	if token_exists{
-		// Spotify API seems to simply not care about revoked token :)
-		client.read_token_cache(true).await.unwrap();
-	}else{
-		client.prompt_for_token(&url).await.unwrap();
-		client.refresh_token().await.unwrap();
-		client.write_token_cache().await.unwrap();
-	}
+	client.prompt_for_token(&url).await.unwrap();
+	client.refresh_token().await.unwrap();
+	client.write_token_cache().await.unwrap();
 
 	client
 
@@ -160,4 +156,32 @@ pub async fn get_public_playlists(client: &ClientCredsSpotify, playlist_id: &Pla
 
 
 	playlist
+}
+
+pub async fn export_playlist_to_user(client: &AuthCodeSpotify, playlist: &Playlist){
+	let user_id = playlist.data.as_ref().unwrap().owner.id.clone_static();
+
+	let date = DateTime::<Local>::from(UNIX_EPOCH + Duration::from_secs(playlist.timestamp));
+	let format_date = format!("{}", date.format("%v %X"));	
+	let name = format!(
+		"Archify - {} - {}",
+		playlist.data.as_ref().unwrap().name,
+		format_date
+	);
+
+	let new_p = client.user_playlist_create(user_id, name.as_str(), Some(true), Some(false), Some(RSPOTIFY_PLAYLIST_DESCRIPTION)).await.unwrap();
+
+	let mut tracks: Vec<PlayableId> = Vec::new();
+	for p in &playlist.data.as_ref().unwrap().tracks.items{
+		match &p.track {
+			Some(item) => match &item.id() {
+				Some(id) => tracks.push(id.clone_static()),
+				None => ()
+			},
+			None => ()
+		}
+	}
+
+	let _ = client.playlist_add_items(new_p.id, tracks , Some(0)).await.unwrap();
+
 }

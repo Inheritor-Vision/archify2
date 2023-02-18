@@ -129,9 +129,9 @@ fn list_tracked_versions(db: &database::Database, playlist_id: &String){
 	let playlists = db.get_all_tracked_versions(&p_id);
 
 	if playlists.is_empty(){
-		println!("No playlist with this id are recorded!");
+		error!("No playlist with this id are recorded!");
 	}else if playlists.len() == 1 {
-		println!("Playlist has not been updated yet! Do an --update first.")
+		error!("Playlist has not been updated yet! Do an --update first.")
 	}else{
 		println!("List of tracked versions for [{}] - {}:", p_id.id(), playlists.get(1).unwrap().data.as_ref().unwrap().name);
 		for p in playlists{
@@ -142,6 +142,25 @@ fn list_tracked_versions(db: &database::Database, playlist_id: &String){
 			}
 		}
 	}
+}
+
+async fn export_playlist(db: &database::Database, playlist_id: &String, index: u64, conf: &ArchifyConf){
+	let client = &spotify::get_spotify_client_from_user(conf).await;
+
+	let p_id ;
+	if !PlaylistId::id_is_valid(playlist_id.as_str()){
+		p_id = PlaylistId::from_id(parse_url(playlist_id).unwrap()).unwrap();
+	}else{
+		p_id = PlaylistId::from_id(playlist_id).unwrap();
+	}
+
+	let playlist = db.get_playlist_from_tracked_index(&p_id, index);
+
+	match playlist {
+		Some(p) => spotify::export_playlist_to_user(client, &p).await,
+		None =>	error!("No playlist with this id & index are stored. Check --tracked.")
+	}
+
 }
 
 fn main() {
@@ -184,14 +203,14 @@ fn main() {
 
 	let db = database::Database::new();
 
-	let _ = Runtime::new().unwrap().block_on(spotify::get_spotify_client_from_user(&conf));
 
 	match args{
 		arguments::Args::NewPlaylist(playlists) => add_playlist(&db, playlists),
 		arguments::Args::Update => Runtime::new().unwrap().block_on(update_playlists(&db, &conf)),
 		arguments::Args::DeletePlaylist(playlists) => delete_playlist(&db, playlists),
 		arguments::Args::List => Runtime::new().unwrap().block_on(list_playlists(&db)),
-		arguments::Args::Tracked(playlist_id) => list_tracked_versions(&db, &playlist_id)
+		arguments::Args::Tracked(playlist_id) => list_tracked_versions(&db, &playlist_id),
+		arguments::Args::Export(export) => Runtime::new().unwrap().block_on(export_playlist(&db, &export.playlist_id, export.index, &conf))
 	}
 
 }

@@ -171,5 +171,36 @@ impl Database {
 		}
 	}
 
+	pub fn get_playlist_from_tracked_index(&self, playlist_id: &PlaylistId, index: u64) -> Option<Playlist>{
+		let serialized_id = serde_json::to_string(playlist_id).unwrap();
+
+		let res = self.client.query_row("SELECT * FROM playlists WHERE playlist_id = ?1 LIMIT 1 OFFSET ?2", params![serialized_id, index], |row| {
+			Ok(
+				Playlist {
+					id: {
+						let res: String = row.get("playlist_id").unwrap();
+						serde_json::from_str(res.as_str()).unwrap()
+					},
+					sha256: row.get("playlist_sha256").unwrap_or_else(|_| {CONF_SHA256_NULL}),
+					timestamp: row.get("timestamp").unwrap_or_else(|_| {CONF_TIMESTAMP_NULL}),
+					count: index,
+					data: {
+						let res: String = row.get("playlist_data").unwrap_or_else(|_| {CONF_NULL_STRING});
+						if !res.is_empty() {
+							serde_json::from_str(res.as_str()).unwrap()
+						} else {
+							CONF_NULL_PLAYLIST_DATA
+						}
+					}
+				}		
+			)	
+		});
+
+		match res {
+			Ok(p) => Some(p),
+			Err(_) => None	
+		}
+	}
 }
+
 

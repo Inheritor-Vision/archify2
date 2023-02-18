@@ -15,6 +15,7 @@ pub const RSPOTIFY_CLIENT_TOKEN_PATH: &str					= "data/client_token.json";
 pub const RSPOTIFY_USER_TOKEN_PATH: &str					= "data/user_token.json";
 pub const RSPOTIFY_REDIRECT_URI: &str						= "http://localhost:8888/callback";
 pub const RSPOTIFY_SCOPES: [&str; 3]						= ["playlist-modify-public", "playlist-modify-private", "ugc-image-upload"];
+pub const RSPOTIFY_PLAYLIST_DESCRIPTION: &str				= "Playlist automatically created by Archify following an export of the archivied playlist.";
 
 // Proxy
 #[cfg(feature = "proxy")]

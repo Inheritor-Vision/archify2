@@ -18,9 +18,17 @@ struct Cli {
 	/// List versions of a single tracked playlist
 	#[arg(short,long,action,value_parser)]
 	tracked: Option<String>,
+	/// Based on playlist id and index given by --tracked, export the playlist to your spotify
+	#[arg(short, long, value_parser, num_args(2..3))]
+	export: Option<Vec<String>>,
 	/// Delete a playlist
 	#[arg(short,long,value_parser, num_args(1..))] 
 	delete_playlist: Option<Vec<String>>,
+}
+
+pub struct ExportArgs{
+	pub playlist_id: String,
+	pub index: u64
 }
 
 pub enum Args {
@@ -28,7 +36,8 @@ pub enum Args {
 	DeletePlaylist(Vec<String>),
 	Update,
 	List,
-	Tracked(String)
+	Tracked(String),
+	Export(ExportArgs)
 }
 
 pub fn parse_args() -> Args{
@@ -45,6 +54,14 @@ pub fn parse_args() -> Args{
 		res = Args::List;
 	} else if cli.tracked != None {
 		res = Args::Tracked(cli.tracked.unwrap());
+	}else if cli.export != None {
+		res = Args::Export(
+			ExportArgs { 
+				playlist_id: cli.export.as_ref().unwrap().get(0).unwrap().clone(),
+				index:  cli.export.as_ref().unwrap().get(1).unwrap().clone().parse().unwrap(),
+			}
+		);
+	
 	}else{
 		let mut cmd = Cli::command();
 		cmd.error(
